@@ -12,38 +12,15 @@ import type {
 } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-const TOKEN_KEY = 'zenrth_token';
-
-export interface AuthUser {
-  _id: string;
-  name: string;
-  email: string;
-  role: 'owner' | 'editor' | 'admin';
-  plan: 'starter' | 'professional' | 'enterprise';
-  monthlyToolLimit: number;
-}
-
-export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(TOKEN_KEY);
-}
-
-export function setAuthToken(token: string | null) {
-  if (typeof window === 'undefined') return;
-  if (token) window.localStorage.setItem(TOKEN_KEY, token);
-  else window.localStorage.removeItem(TOKEN_KEY);
-}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getAuthToken();
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
     headers:
       init?.body instanceof FormData
-        ? { ...(token ? { Authorization: `Bearer ${token}` } : {}), ...init.headers }
+        ? { ...init.headers }
         : {
             'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
             ...init?.headers,
           },
     cache: 'no-store',
@@ -64,20 +41,6 @@ export function resolvePhotoUrl(url: string): string {
 
 export const api = {
   health: () => request<{ ok: boolean; geminiConfigured: boolean; pipeline: Record<string, number> }>('/api/health'),
-
-  register: (name: string, email: string, password: string) =>
-    request<{ token: string; user: AuthUser }>('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password }),
-    }),
-
-  login: (email: string, password: string) =>
-    request<{ token: string; user: AuthUser }>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
-
-  me: () => request<AuthUser>('/api/auth/me'),
 
   workspaceActivity: () => request<WorkspaceActivity>('/api/listings/workspace/activity'),
 
@@ -144,10 +107,7 @@ export const api = {
     }),
 
   exportListing: async (listingId: string) => {
-    const token = getAuthToken();
-    const response = await fetch(`${API_BASE}/api/listings/${listingId}/export`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
+    const response = await fetch(`${API_BASE}/api/listings/${listingId}/export`);
     if (!response.ok) throw new Error('Could not export this property.');
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
