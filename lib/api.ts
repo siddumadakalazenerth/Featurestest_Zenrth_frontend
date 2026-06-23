@@ -19,10 +19,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers:
       init?.body instanceof FormData
         ? { ...init.headers }
-        : {
-            'Content-Type': 'application/json',
-            ...init?.headers,
-          },
+        : { 'Content-Type': 'application/json', ...init?.headers },
     cache: 'no-store',
   });
 

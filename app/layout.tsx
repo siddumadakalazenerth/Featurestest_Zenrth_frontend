@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
+import { AuthGuard } from '@/components/AuthGuard';
 
 const display = Space_Grotesk({
   subsets: ['latin'],
@@ -29,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body className="font-body bg-paper text-ink antialiased min-h-screen">
-        {children}
+        <AuthGuard>{children}</AuthGuard>
       </body>
     </html>
   );
